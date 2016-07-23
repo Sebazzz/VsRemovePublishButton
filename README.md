@@ -3,5 +3,7 @@ This very simple extension hides the "Publish" button in the Visual Studio statu
 
 The Publish button in Visual Studio polutes the status bar if you don't use it, and can also cause accidental creation of a Git repository on the project location.
 
+View the announcement of this extension on [my blog](http://damsteen.nl/blog/2016/07/23/remove-the-publish-button-from-visual-studio).
+
 ## Download
 This extension is published on the [Visual Studio Extension Gallery](https://visualstudiogallery.msdn.microsoft.com/6e8c558f-b681-4a6a-931b-4efb04714364).
