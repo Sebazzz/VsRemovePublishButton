@@ -51,7 +51,14 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="OptionPage.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="OptionPage.Designer.cs">
+      <DependentUpon>OptionPage.cs</DependentUpon>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="PublishButton.cs" />
     <Compile Include="VsRemovePublishButtonPackage.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -175,6 +182,9 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="OptionPage.resx">
+      <DependentUpon>OptionPage.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="VSPackage.resx">
       <MergeWithCTO>true</MergeWithCTO>
       <ManifestResourceName>VSPackage</ManifestResourceName>

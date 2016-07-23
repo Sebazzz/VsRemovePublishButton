@@ -6,11 +6,13 @@
 
 namespace VsRemovePublishButton {
     using System;
+    using System.ComponentModel;
     using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
     using System.Runtime.InteropServices;
     using System.Windows;
     using System.Windows.Controls.Primitives;
+    using System.Windows.Forms;
     using System.Windows.Media;
     using System.Windows.Threading;
     using Microsoft.VisualStudio;
@@ -24,20 +26,28 @@ namespace VsRemovePublishButton {
     [ProvideAutoLoad(UIContextGuids80.SolutionExists)]
     [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly",
         Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
+    [ProvideOptionPage(typeof(OptionPageCustom), "Environment", "Status Bar Publish Button", 0, 0, true)]
     public sealed class VsRemovePublishButtonPackage : Package, IVsSolutionEvents {
         public const string PackageGuidString = "967c2ebc-beef-44c3-bd8e-83da5f654bae";
 
         private const int MaximumRetries = 50;
 
-        private StatusBar _statusBar;
         private int _retryCount;
 
         protected override void Initialize() {
             base.Initialize();
             
-            this.DoHidePublishButton();
+            this.DoHidePublishButtonIfRequired();
 
             this.SetupEventHandling();
+        }
+
+        private void DoHidePublishButtonIfRequired() {
+            OptionPageCustom page = (OptionPageCustom) this.GetDialogPage(typeof(OptionPageCustom));
+
+            if (page.HideByDefault) {
+                this.DoHidePublishButton();
+            }
         }
 
         private void SetupEventHandling() {
@@ -51,7 +61,7 @@ namespace VsRemovePublishButton {
         }
 
         private void DoHidePublishButton() {
-            if (this.TryHidePublishButton()) {
+            if (PublishButton.TryHide()) {
                 this._retryCount = 0;
                 return;
             }
@@ -84,50 +94,6 @@ namespace VsRemovePublishButton {
             this.DoHidePublishButton();
         }
 
-        private bool TryHidePublishButton() {
-            const string elementId = "PublishCompartment";
-
-            FrameworkElement publishElement = this.FindElement(Application.Current.MainWindow, elementId);
-
-            if (publishElement != null) {
-                publishElement.Visibility = Visibility.Collapsed;
-                return true;
-            }
-
-            return false;
-        }
-
-        private FrameworkElement FindElement(Visual v, string name) {
-            if (v == null) {
-                return null;
-            }
-
-            for (var i = 0; i < VisualTreeHelper.GetChildrenCount(v); ++i) {
-                var child = VisualTreeHelper.GetChild(v, i) as Visual;
-
-                var e = child as FrameworkElement;
-                if (e != null && e.Name == name) {
-                    return e;
-                }
-
-                var result = this.FindElement(child, name);
-                if (result != null) {
-                    return result;
-                }
-            }
-
-            return null;
-        }
-
-        private void LogInfo(string text) {
-            IVsActivityLog log = this.GetService(typeof(SVsActivityLog)) as IVsActivityLog;
-            if (log == null) return;
-
-            log.LogEntry((UInt32)__ACTIVITYLOG_ENTRYTYPE.ALE_INFORMATION,
-                this.ToString(),
-                text);
-        }
-
         private void LogWarning(string text) {
             IVsActivityLog log = this.GetService(typeof(SVsActivityLog)) as IVsActivityLog;
             if (log == null) return;
@@ -138,7 +104,7 @@ namespace VsRemovePublishButton {
         }
 
         int IVsSolutionEvents.OnAfterOpenSolution(object pUnkReserved, int fNewSolution) {
-            this.TryHidePublishButton();
+            this.DoHidePublishButtonIfRequired();
 
             return VSConstants.S_OK;
         }
@@ -160,5 +126,24 @@ namespace VsRemovePublishButton {
         int IVsSolutionEvents.OnBeforeCloseSolution(object pUnkReserved) => VSConstants.S_OK;
 
         int IVsSolutionEvents.OnAfterCloseSolution(object pUnkReserved) => VSConstants.S_OK;
+    }
+
+    [Guid("3993FEBB-7965-4EEB-A071-D20788FB37AF")]
+    public class OptionPageCustom : DialogPage {
+        private OptionPage _optionsPageCtrl;
+
+        public bool HideByDefault { get; set; } = true;
+
+        protected override IWin32Window Window => this.CreateSettingsControl();
+
+        private IWin32Window CreateSettingsControl() {
+            return this._optionsPageCtrl = new OptionPage(this);
+        }
+
+        protected override void OnActivate(CancelEventArgs e) {
+            base.OnActivate(e);
+
+            this._optionsPageCtrl?.OnActivate();
+        }
     }
 }

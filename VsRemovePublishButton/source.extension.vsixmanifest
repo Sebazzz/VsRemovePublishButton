@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
   <Metadata>
-    <Identity Id="VsRemovePublishButton.SebastiaanDammann.d3614f48-4c18-4ab8-abe6-7649e569c118" Version="1.0" Language="en-US" Publisher="Sebastiaan Dammann" />
+    <Identity Id="VsRemovePublishButton.SebastiaanDammann.d3614f48-4c18-4ab8-abe6-7649e569c118" Version="1.1" Language="en-US" Publisher="Sebastiaan Dammann" />
     <DisplayName>Remove the Visual Studio Publish button</DisplayName>
     <Description xml:space="preserve">Removes the Visual Studio "Publish" button from the status bar, which creates a git repository on click.
 
