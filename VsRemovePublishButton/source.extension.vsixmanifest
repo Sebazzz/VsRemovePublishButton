@@ -3,10 +3,11 @@
   <Metadata>
     <Identity Id="VsRemovePublishButton.SebastiaanDammann.d3614f48-4c18-4ab8-abe6-7649e569c118" Version="1.1" Language="en-US" Publisher="Sebastiaan Dammann" />
     <DisplayName>Remove the Visual Studio Publish button</DisplayName>
-    <Description xml:space="preserve">Removes the Visual Studio "Publish" button from the status bar, which creates a git repository on click.
-
-Icon: Google Material Design icons - Creative Commons (Attribution-Share Alike 3.0 Unported)</Description>
+    <Description xml:space="preserve">Removes the Visual Studio "Publish" button from the status bar, which creates a git repository on click.</Description>
+    <MoreInfo>https://github.com/Sebazzz/VsRemovePublishButton</MoreInfo>
     <Icon>Resources\VsRemovePublishButtonPackage.ico</Icon>
+    <PreviewImage>Resources\Screenshot.png</PreviewImage>
+    <Tags>publish,git</Tags>
   </Metadata>
   <Installation>
     <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[14.0,15.0)" />
