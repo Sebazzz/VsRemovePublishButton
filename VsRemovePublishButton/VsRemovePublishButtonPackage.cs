@@ -103,6 +103,15 @@ namespace VsRemovePublishButton {
                 text);
         }
 
+        private void LogInfo(string text) {
+            IVsActivityLog log = this.GetService(typeof(SVsActivityLog)) as IVsActivityLog;
+            if (log == null) return;
+
+            log.LogEntry((UInt32)__ACTIVITYLOG_ENTRYTYPE.ALE_INFORMATION,
+                this.ToString(),
+                text);
+        }
+
         int IVsSolutionEvents.OnAfterOpenSolution(object pUnkReserved, int fNewSolution) {
             this.DoHidePublishButtonIfRequired();
 
