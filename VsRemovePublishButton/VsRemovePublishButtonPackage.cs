@@ -8,12 +8,8 @@ namespace VsRemovePublishButton {
     using System;
     using System.ComponentModel;
     using System.Diagnostics.CodeAnalysis;
-    using System.Globalization;
     using System.Runtime.InteropServices;
-    using System.Windows;
-    using System.Windows.Controls.Primitives;
     using System.Windows.Forms;
-    using System.Windows.Media;
     using System.Windows.Threading;
     using Microsoft.VisualStudio;
     using Microsoft.VisualStudio.Shell;
