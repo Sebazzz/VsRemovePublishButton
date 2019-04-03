@@ -57,8 +57,8 @@ namespace VsRemovePublishButton {
                 await this.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
             }
 
-            IVsSolution2 solution = (IVsSolution2) await this.GetServiceAsync(typeof(SVsSolution));
-
+            IVsSolution solution = (IVsSolution) await this.GetServiceAsync(typeof(SVsSolution));
+            
             if (solution == null) {
                 this.LogWarning($"Unable to listen for solution events: this.GetServiceAsync(typeof(SVsSolution)) returned null");
                 return;
