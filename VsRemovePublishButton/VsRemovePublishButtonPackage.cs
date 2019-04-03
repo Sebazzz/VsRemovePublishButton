@@ -9,54 +9,70 @@ namespace VsRemovePublishButton {
     using System.ComponentModel;
     using System.Diagnostics.CodeAnalysis;
     using System.Runtime.InteropServices;
+    using System.Threading;
     using System.Windows.Forms;
     using System.Windows.Threading;
     using Microsoft.VisualStudio;
     using Microsoft.VisualStudio.Shell;
     using Microsoft.VisualStudio.Shell.Interop;
     using Application = System.Windows.Application;
+    using Task = System.Threading.Tasks.Task;
 
-    [PackageRegistration(UseManagedResourcesOnly = true)]
+    [PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
     [InstalledProductRegistration("#110", "#112", "1.0", IconResourceID = 400)]
     [Guid(PackageGuidString)]
-    [ProvideAutoLoad(UIContextGuids80.SolutionExists)]
+    [ProvideAutoLoad(UIContextGuids80.SolutionExists, PackageAutoLoadFlags.BackgroundLoad)]
     [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly",
         Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
     [ProvideOptionPage(typeof(OptionPageCustom), "Environment", "Status Bar Publish Button", 0, 0, true)]
-    public sealed class VsRemovePublishButtonPackage : Package, IVsSolutionEvents {
+    public sealed class VsRemovePublishButtonPackage : AsyncPackage, IVsSolutionEvents {
         public const string PackageGuidString = "967c2ebc-beef-44c3-bd8e-83da5f654bae";
 
         private const int MaximumRetries = 50;
 
         private int _retryCount;
 
-        protected override void Initialize() {
-            base.Initialize();
-            
-            this.DoHidePublishButtonIfRequired();
+        protected override async Task InitializeAsync(System.Threading.CancellationToken cancellationToken, IProgress<ServiceProgressData> progress) {
+            await this.DoHidePublishButtonIfRequiredAsync(cancellationToken);
 
-            this.SetupEventHandling();
+            await this.SetupEventHandlingAsync(cancellationToken);
+
+            await base.InitializeAsync(cancellationToken, progress).ConfigureAwait(false);
         }
 
-        private void DoHidePublishButtonIfRequired() {
+        private async Task DoHidePublishButtonIfRequiredAsync(System.Threading.CancellationToken cancellationToken) {
             OptionPageCustom page = (OptionPageCustom) this.GetDialogPage(typeof(OptionPageCustom));
 
             if (page.HideByDefault) {
+                if (ThreadHelper.CheckAccess() == false) {
+                    await this.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
+                }
+
                 this.DoHidePublishButton();
             }
         }
 
-        private void SetupEventHandling() {
-            IVsSolution2 solution = (IVsSolution2) this.GetService(typeof(SVsSolution));
+        private async Task SetupEventHandlingAsync(System.Threading.CancellationToken cancellationToken) {
+            if (ThreadHelper.CheckAccess() == false) {
+                await this.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
+            }
 
-            uint ignored;
+            IVsSolution2 solution = (IVsSolution2) await this.GetServiceAsync(typeof(SVsSolution));
+
+            if (solution == null) {
+                this.LogWarning($"Unable to listen for solution events: this.GetServiceAsync(typeof(SVsSolution)) returned null");
+                return;
+            }
+
             int hr;
-            if ((hr = solution.AdviseSolutionEvents(this, out ignored)) != VSConstants.S_OK) {
+            if ((hr = solution.AdviseSolutionEvents(this, out _)) != VSConstants.S_OK) {
                 this.LogWarning($"Unable to listen for solution events: HRESULT {hr:x2}");
             }
         }
 
         private void DoHidePublishButton() {
+            ThreadHelper.ThrowIfNotOnUIThread();
+
             if (PublishButton.TryHide()) {
                 this._retryCount = 0;
                 return;
@@ -83,6 +99,8 @@ namespace VsRemovePublishButton {
         }
 
         private void TryHidePublishButton(object sender, EventArgs e) {
+            ThreadHelper.ThrowIfNotOnUIThread();
+
             DispatcherTimer timer = (DispatcherTimer) sender;
 
             timer.Stop();
@@ -91,6 +109,8 @@ namespace VsRemovePublishButton {
         }
 
         private void LogWarning(string text) {
+            ThreadHelper.ThrowIfNotOnUIThread();
+
             IVsActivityLog log = this.GetService(typeof(SVsActivityLog)) as IVsActivityLog;
             if (log == null) return;
 
@@ -100,6 +120,8 @@ namespace VsRemovePublishButton {
         }
 
         private void LogInfo(string text) {
+            ThreadHelper.ThrowIfNotOnUIThread();
+
             IVsActivityLog log = this.GetService(typeof(SVsActivityLog)) as IVsActivityLog;
             if (log == null) return;
 
@@ -109,7 +131,11 @@ namespace VsRemovePublishButton {
         }
 
         int IVsSolutionEvents.OnAfterOpenSolution(object pUnkReserved, int fNewSolution) {
-            this.DoHidePublishButtonIfRequired();
+            this.JoinableTaskFactory.RunAsync(async () => {
+                await this.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+                await this.DoHidePublishButtonIfRequiredAsync(CancellationToken.None);
+            });
 
             return VSConstants.S_OK;
         }
