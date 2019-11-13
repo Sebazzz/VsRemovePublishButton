@@ -41,12 +41,13 @@ namespace VsRemovePublishButton {
         }
 
         private async Task DoHidePublishButtonIfRequiredAsync(System.Threading.CancellationToken cancellationToken) {
+            if (ThreadHelper.CheckAccess() == false) {
+                await this.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
+            }
+
             OptionPageCustom page = (OptionPageCustom) this.GetDialogPage(typeof(OptionPageCustom));
 
             if (page.HideByDefault) {
-                if (ThreadHelper.CheckAccess() == false) {
-                    await this.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
-                }
 
                 this.DoHidePublishButton();
             }
